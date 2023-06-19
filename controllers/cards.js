@@ -4,7 +4,6 @@ const Card = require('../models/card');
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .orFail()
     .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию' }));
 };
 
@@ -13,7 +12,6 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link })
     .then((card) => res.status(201).send(card))
-    .orFail()
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
@@ -25,8 +23,8 @@ module.exports.createCard = (req, res) => {
 // удаляет карточку по идентификатору
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => res.status(200).send(card))
     .orFail()
+    .then((card) => res.status(200).send(card))
     .catch(() => res.status(404).send({ message: 'Карточка с указанным _id не найдена' }));
 };
 
@@ -37,8 +35,8 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .then((card) => res.status(200).send(card))
     .orFail()
+    .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
@@ -57,8 +55,8 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
-    .then((card) => res.status(200).send(card))
     .orFail()
+    .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка' });
