@@ -48,7 +48,7 @@ module.exports.likeCard = (req, res) => {
     });
 };
 
-// убрать лайк с карточки
+// убрать лайк с карточк
 module.exports.dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
