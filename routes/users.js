@@ -16,5 +16,5 @@ router.post('/', createUser);
 // обновляет профиль
 router.patch('/me', editProfile);
 // обновляет аватар
-router.patch('/me', editAvatar);
+router.patch('/me/avatar', editAvatar);
 module.exports = router;

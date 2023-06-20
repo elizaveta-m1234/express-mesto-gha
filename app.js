@@ -8,15 +8,19 @@ app.use(express.json());
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
 app.use((req, res, next) => {
   req.user = {
     _id: '648d03fa2a6fb2463d5e5cba', // вставьте сюда _id созданного в предыдущем пункте пользователя
   };
 
   next();
+});
+
+app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
+
+app.use((req, res) => {
+  res.status(404).send({ message: 'Страница не найдена' });// отправить ошибку с кодом 404
 });
 
 app.listen(PORT, () => {

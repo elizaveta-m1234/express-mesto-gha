@@ -1,22 +1,25 @@
 const Card = require('../models/card');
+const {
+  created, badRequest, notFound, internalServerError,
+} = require('../utils/constants');
 
 // возвращает все карточки
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию' }));
+    .catch(() => res.status(internalServerError).send({ message: 'Ошибка по умолчанию' }));
 };
 
 // создаёт карточку
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
-  Card.create({ name, link })
-    .then((card) => res.status(201).send(card))
+  Card.create({ name, link, owner: req.user._id })
+    .then((card) => res.status(created).send(card))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
+      if (err.name === 'ValidationError') {
+        return res.status(badRequest).send({ message: 'Переданы некорректные данные при создании карточки' });
       }
-      return res.status(500).send({ message: 'Ошибка по умолчанию' });
+      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
     });
 };
 
@@ -24,8 +27,16 @@ module.exports.createCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
     .orFail()
-    .then((card) => res.status(200).send(card))
-    .catch(() => res.status(404).send({ message: 'Карточка с указанным _id не найдена' }));
+    .then((card) => res.send(card))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(badRequest).send({ message: 'Переданы некорректные данные' });
+      }
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(notFound).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
+    });
 };
 
 // поставить лайк карточке
@@ -36,15 +47,15 @@ module.exports.likeCard = (req, res) => {
     { new: true },
   )
     .orFail()
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
+        return res.status(badRequest).send({ message: 'Переданы некорректные данные для постановки лайка' });
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(notFound).send({ message: 'Передан несуществующий _id карточки' });
       }
-      return res.status(500).send({ message: 'Ошибка по умолчанию' });
+      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
     });
 };
 
@@ -56,14 +67,14 @@ module.exports.dislikeCard = (req, res) => {
     { new: true },
   )
     .orFail()
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка' });
+        return res.status(badRequest).send({ message: 'Переданы некорректные данные для снятия лайка' });
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(notFound).send({ message: 'Передан несуществующий _id карточки' });
       }
-      return res.status(500).send({ message: 'Ошибка по умолчанию' });
+      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
     });
 };
