@@ -25,10 +25,15 @@ module.exports.createCard = (req, res) => {
 
 // удаляет карточку по идентификатору
 module.exports.deleteCard = (req, res) => {
+  const id = req.user._id;
+
   Card.findByIdAndDelete(req.params.cardId)
     .orFail()
     .then((card) => res.send(card))
-    .catch((err) => {
+    .catch((err, card) => {
+      if (id !== card.owner.toString()) {
+        return res.status(badRequest).send({ message: 'ЗОПРЕЩЕНО' });
+      }
       if (err.name === 'CastError') {
         return res.status(badRequest).send({ message: 'Переданы некорректные данные' });
       }
