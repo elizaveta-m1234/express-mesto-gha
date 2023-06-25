@@ -1,6 +1,8 @@
+/* eslint-disable linebreak-style */
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const { unauthorized } = require('../errors/unauthorized');
 
 const userSchema = new mongoose.Schema({
   name: { // у пользователя есть имя — опишем требования к имени в схеме:
@@ -21,6 +23,12 @@ const userSchema = new mongoose.Schema({
     type: String, //  это строка
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     // required: true, // оно должно быть у каждого пользователя
+    validate: {
+      validator(avatar) {
+        return /^(http(s)?:\/\/)(w.){3}[\w\-._~:/?#[\]@!$&'()*+,;=.]+#/i.test(avatar);
+      },
+      message: 'Вставьте ссылку на картинку',
+    },
   },
   email: { // у пользователя есть имя — опишем требования к имени в схеме:
     type: String, // имя — это строка
@@ -46,13 +54,13 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(unauthorized);
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            return Promise.reject(unauthorized);
           }
 
           return user; // теперь user доступен

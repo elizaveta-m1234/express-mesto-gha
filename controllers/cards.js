@@ -1,30 +1,36 @@
+// eslint-disable-next-line linebreak-style
 const Card = require('../models/card');
-const {
-  created, badRequest, notFound, internalServerError,
-} = require('../utils/constants');
+const { created } = require('../utils/constants');
+const { InternalError } = require('../errors/internal-server-error');
+const { BadRequest } = require('../errors/bad-request');
+const { NotFound } = require('../errors/not-found');
+const { Forbidden } = require('../errors/forbiden');
 
 // возвращает все карточки
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => res.status(internalServerError).send({ message: 'Ошибка по умолчанию' }));
+    // При обработке ошибок в блоке catch они не выбрасываются через throw , а передаются в
+    // централизованный обработчик ошибок с помощью next
+    .catch(() => next(new InternalError('Ошибка по умолчанию')));
 };
 
 // создаёт карточку
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.status(created).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(badRequest).send({ message: 'Переданы некорректные данные при создании карточки' });
+        next(new BadRequest('Переданы некорректные данные при создании карточки'));
+        return;
       }
-      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
+      next(new InternalError('Ошибка по умолчанию'));
     });
 };
 
 // удаляет карточку по идентификатору
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   const id = req.user._id;
 
   Card.findByIdAndDelete(req.params.cardId)
@@ -32,20 +38,23 @@ module.exports.deleteCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err, card) => {
       if (id !== card.owner.toString()) {
-        return res.status(badRequest).send({ message: 'ЗОПРЕЩЕНО' });
+        next(new Forbidden('Отсутствует доступ'));
+        return;
       }
       if (err.name === 'CastError') {
-        return res.status(badRequest).send({ message: 'Переданы некорректные данные' });
+        next(new BadRequest('Переданы некорректные данные'));
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(notFound).send({ message: 'Карточка с указанным _id не найдена' });
+        next(new NotFound('Карточка с указанным _id не найдена'));
+        return;
       }
-      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
+      next(new InternalError('Ошибка по умолчанию'));
     });
 };
 
 // поставить лайк карточке
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
@@ -55,17 +64,19 @@ module.exports.likeCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(badRequest).send({ message: 'Переданы некорректные данные для постановки лайка' });
+        next(new BadRequest('Переданы некорректные данные для постановки лайка'));
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(notFound).send({ message: 'Передан несуществующий _id карточки' });
+        next(new NotFound('Передан несуществующий _id карточки'));
+        return;
       }
-      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
+      next(new InternalError('Ошибка по умолчанию'));
     });
 };
 
 // убрать лайк с карточк
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
@@ -75,11 +86,13 @@ module.exports.dislikeCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(badRequest).send({ message: 'Переданы некорректные данные для снятия лайка' });
+        next(new BadRequest('Переданы некорректные данные для снятия лайка'));
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(notFound).send({ message: 'Передан несуществующий _id карточки' });
+        next(new NotFound('Передан несуществующий _id карточки'));
+        return;
       }
-      return res.status(internalServerError).send({ message: 'Ошибка по умолчанию' });
+      next(new InternalError('Ошибка по умолчанию'));
     });
 };
