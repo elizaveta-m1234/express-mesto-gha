@@ -1,10 +1,10 @@
-// eslint-disable-next-line linebreak-style
+/* eslint-disable linebreak-style */
 const Card = require('../models/card');
 const { created } = require('../utils/constants');
-const { InternalError } = require('../errors/internal-server-error');
-const { BadRequest } = require('../errors/bad-request');
-const { NotFound } = require('../errors/not-found');
-const { Forbidden } = require('../errors/forbiden');
+const InternalError = require('../errors/internal-server-error');
+const BadRequest = require('../errors/bad-request');
+const NotFound = require('../errors/not-found');
+const Forbidden = require('../errors/forbiden');
 
 // возвращает все карточки
 module.exports.getCards = (req, res, next) => {
@@ -33,14 +33,17 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   const id = req.user._id;
 
-  Card.findByIdAndDelete(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail()
-    .then((card) => res.send(card))
-    .catch((err, card) => {
+    .then((card) => {
       if (id !== card.owner.toString()) {
-        next(new Forbidden('Отсутствует доступ'));
-        return;
+        throw new Forbidden('Отсутствует доступ');
       }
+      card.deleteOne()
+        .then(() => res.send({ message: 'Карточка удалена' }))
+        .catch(next);
+    })
+    .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequest('Переданы некорректные данные'));
         return;
@@ -75,7 +78,7 @@ module.exports.likeCard = (req, res, next) => {
     });
 };
 
-// убрать лайк с карточк
+// убрать лайк с карточки
 module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,

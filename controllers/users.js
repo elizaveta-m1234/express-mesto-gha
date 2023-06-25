@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { created } = require('../utils/constants');
-const { InternalError } = require('../errors/internal-server-error');
-const { BadRequest } = require('../errors/bad-request');
-const { NotFound } = require('../errors/not-found');
-const { Conflict } = require('../errors/conflict');
-const { Unathorized } = require('../errors/unauthorized');
+const InternalError = require('../errors/internal-server-error');
+const BadRequest = require('../errors/bad-request');
+const NotFound = require('../errors/not-found');
+const Conflict = require('../errors/conflict');
+const Unathorized = require('../errors/unauthorized');
 
 // возвращает всех пользователей
 module.exports.getUsers = (req, res, next) => {
@@ -60,7 +60,9 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.status(created).send(user))
+    .then(() => res.status(created).send({
+      name, about, avatar, email,
+    }))
     .catch((err) => {
       if (err.code === 11000) {
         next(new Conflict('Пользователь с такой почтой уже существует'));

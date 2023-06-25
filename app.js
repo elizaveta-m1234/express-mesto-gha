@@ -6,6 +6,7 @@ const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const NotFound = require('./errors/not-found');
 
 const { PORT = 3000 } = process.env;
 
@@ -26,7 +27,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri(({ scheme: ['http', 'https'] })),
+    avatar: Joi.string().pattern(/^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i),
   }),
 }), createUser);
 
@@ -36,15 +37,25 @@ app.use(auth);
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-// app.use((req, res) => {
-//   res.status(404).send({ message: 'Страница не найдена' });// отправить ошибку с кодом 404
-// });
-
 // здесь обрабатываем все ошибки
+app.use((req, res, next) => {
+  next(new NotFound('Страница не найдена'));// отправить ошибку с кодом 404
+});
+
 app.use(errors());
 
 app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({ message: err.message });
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
   next();
 });
 

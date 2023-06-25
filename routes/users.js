@@ -11,12 +11,9 @@ const {
 
 // возвращает всех пользователей
 router.get('/', getUsers);
-// возвращает пользователя по _id
-router.get('/:userId', celebrate({
-  params: Joi.object().keys({
-    id: Joi.string().required(),
-  }),
-}), getUserId);
+
+// возвращает информацию о текущем пользователе
+router.get('/me', getCurrentUser);
 // обновляет профиль
 router.patch('/me', celebrate({
   body: Joi.object().keys({
@@ -27,10 +24,14 @@ router.patch('/me', celebrate({
 // обновляет аватар
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().uri(({ scheme: ['http', 'https'] })),
+    avatar: Joi.string().pattern(/^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i),
   }),
 }), editAvatar);
-// возвращает информацию о текущем пользователе
-router.get('/me', getCurrentUser);
+// возвращает пользователя по _id
+router.get('/:userId', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().length(24).hex().required(),
+  }),
+}), getUserId);
 
 module.exports = router;

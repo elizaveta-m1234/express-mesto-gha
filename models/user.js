@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { unauthorized } = require('../errors/unauthorized');
+const Unauthorized = require('../errors/unauthorized');
 
 const userSchema = new mongoose.Schema({
   name: { // у пользователя есть имя — опишем требования к имени в схеме:
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     // required: true, // оно должно быть у каждого пользователя
     validate: {
       validator(avatar) {
-        return /^(http(s)?:\/\/)(w.){3}[\w\-._~:/?#[\]@!$&'()*+,;=.]+#/i.test(avatar);
+        return /^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i.test(avatar);
       },
       message: 'Вставьте ссылку на картинку',
     },
@@ -44,7 +44,6 @@ const userSchema = new mongoose.Schema({
   password: { // у пользователя есть имя — опишем требования к имени в схеме:
     type: String, // имя — это строка
     required: true, // оно должно быть у каждого пользователя, так что имя — обязательное поле
-    minlength: 8, // минимальная длина — 8 символа
     select: false, // необходимо добавить поле select
   },
 });
@@ -54,13 +53,13 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(unauthorized);
+        return Promise.reject(new Unauthorized('Неверный логин или пароль'));
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(unauthorized);
+            return Promise.reject(new Unauthorized('Неверный логин или пароль'));
           }
 
           return user; // теперь user доступен
