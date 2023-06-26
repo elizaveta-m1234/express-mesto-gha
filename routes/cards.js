@@ -15,7 +15,7 @@ router.get('/', getCards);
 router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().pattern(/^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i).required(),
+    link: Joi.string().pattern(/^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+#?$/i).required(),
   }),
 }), createCard);
 // удаляет карточку по идентификатору

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     // required: true, // оно должно быть у каждого пользователя
     validate: {
       validator(avatar) {
-        return /^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i.test(avatar);
+        return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+#?$/i.test(avatar);
       },
       message: 'Вставьте ссылку на картинку',
     },

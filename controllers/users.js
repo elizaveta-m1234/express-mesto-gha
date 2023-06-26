@@ -7,7 +7,6 @@ const InternalError = require('../errors/internal-server-error');
 const BadRequest = require('../errors/bad-request');
 const NotFound = require('../errors/not-found');
 const Conflict = require('../errors/conflict');
-const Unathorized = require('../errors/unauthorized');
 
 // возвращает всех пользователей
 module.exports.getUsers = (req, res, next) => {

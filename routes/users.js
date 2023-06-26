@@ -24,7 +24,7 @@ router.patch('/me', celebrate({
 // обновляет аватар
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().pattern(/^(http(s)?:\/\/)(www\.)?[\w-._~:/?#[\]@!$&'()*+,;=.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?.+?#?$/i),
+    avatar: Joi.string().pattern(/^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+#?$/i),
   }),
 }), editAvatar);
 // возвращает пользователя по _id
