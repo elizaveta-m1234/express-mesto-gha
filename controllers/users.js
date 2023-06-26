@@ -127,11 +127,5 @@ module.exports.login = (req, res, next) => {
       // рекомендуем записывать JWT в httpOnly куку.
       res.cookie('jwt', token, { httpOnly: true }).send({ token }).end();
     })
-    .catch((err) => {
-      if (err.name === 'UnauthorizedError') {
-        next(new Unathorized('Неправильные логин или пароль'));
-        return;
-      }
-      next(new InternalError('Ошибка по умолчанию'));
-    });
+    .catch(next);
 };

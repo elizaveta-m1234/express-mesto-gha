@@ -52,7 +52,7 @@ module.exports.deleteCard = (req, res, next) => {
         next(new NotFound('Карточка с указанным _id не найдена'));
         return;
       }
-      next(new InternalError('Ошибка по умолчанию'));
+      next(err);
     });
 };
 
